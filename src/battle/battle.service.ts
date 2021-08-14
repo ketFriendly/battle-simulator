@@ -2,8 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Army } from './models/army.model';
 import { Battle } from './models/battle.model';
-import { battlestatus } from '../utils/enums'
-import { AddArmyDTO } from './dtos/addArmy.dto';
+import { BattleStatus } from '../utils/constants';
+import { ArmyDTO } from './dtos/army.dto';
+import { classToPlain } from 'class-transformer';
+import { BattleDTO } from './dtos/battle.dto';
 
 
 @Injectable()
@@ -16,11 +18,11 @@ export class BattleService {
   ) { }
 
   async createBattle(): Promise<number> {
-    const battle = await this.battleModel.create({ status: battlestatus.CREATED, units: [] });
+    const battle = await this.battleModel.create({ status: BattleStatus[0], units: [] });
     return battle.id;
   }
-  async addArmy(army: AddArmyDTO) {
-    const battles = await this.battleModel.findAll({ where: { status: battlestatus.CREATED } });
+  async addArmy(army: ArmyDTO):Promise<string> {
+    const battles = await this.battleModel.findAll({ where: { status: BattleStatus[0] } });
     console.log(battles)
     if (battles.length>0) {
       const tempArmy = new this.armyModel(army);
@@ -30,5 +32,11 @@ export class BattleService {
       return `Created an army with the id ${newArmy.id}`;
     }
     return "Cannot add army as all battles have already started or finished. Try creating a new battle."
+  }
+
+  async getAllBattles():Promise<any>{
+    const allBattles = await this.battleModel.findAll({include:[Army]});
+    const allBattlesDtos = allBattles.map(battle => classToPlain(new BattleDTO(battle.toJSON())));
+    return allBattlesDtos;
   }
 }

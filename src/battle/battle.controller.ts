@@ -1,6 +1,7 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { BattleService } from './battle.service';
-import { AddArmyDTO } from './dtos/addArmy.dto';
+import { ArmyDTO } from './dtos/army.dto';
+import { BattleDTO } from './dtos/battle.dto';
 
 
 
@@ -12,18 +13,26 @@ export class BattleController {
   async createNewBattle(): Promise<number> {
     try {
       return await this.battleService.createBattle();
-    }
-    catch (error) {
+    } catch (error) {
       console.log(error);
     }
   }
 
   @Post('add-army')
-  async addArmy(@Body('army') army: AddArmyDTO):Promise<string> {
-    try{
+  async addArmy(@Body('army') army: ArmyDTO): Promise<string> {
+    try {
       return await this.battleService.addArmy(army);
-    }catch (error){
+    } catch (error) {
       console.log(error);
+    }
+  }
+
+  @Get()
+  async getAllGames():Promise<BattleDTO>{
+    try {
+      return await this.battleService.getAllBattles()
+    } catch (error) {
+      console.log(error)
     }
   }
 }
