@@ -12,8 +12,7 @@ config()
   imports: [SequelizeModule.forRoot({
     dialect: 'postgres',
     host: 'localhost',
-    storage: ':memory:',
-    port: 5433,
+    port: parseInt(process.env.PGPORT)||5432,
     username: process.env.PGUSER,
     password: process.env.PGPASS,
     database: process.env.PGDB,

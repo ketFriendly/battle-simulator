@@ -2,7 +2,7 @@ import { Column, ForeignKey, Model, Table, BelongsTo} from 'sequelize-typescript
 import { Battle } from './battle.model';
 
 @Table
-export class Army extends Model<Army> {
+export class Army extends Model {
   @Column
   name: string;
 
