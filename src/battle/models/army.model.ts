@@ -10,12 +10,12 @@ export class Army extends Model {
   units: number;
 
   @Column
-  strategie: string;
+  strategy: string;
 
   @ForeignKey(()=> Battle)
   @Column
-  battleId: number
+  battleId: number;
 
   @BelongsTo(() => Battle)
-  battle: Battle
+  battle: Battle;
 }
