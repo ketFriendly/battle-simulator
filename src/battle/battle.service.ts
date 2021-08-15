@@ -1,4 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BeforeApplicationShutdown,
+  Inject,
+  Injectable,
+  OnApplicationShutdown,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { classToPlain } from 'class-transformer';
 import { ArmyDTO } from './dtos/army.dto';
@@ -6,21 +11,30 @@ import { BattleDTO } from './dtos/battle.dto';
 import { AttackStrategy, BattleStatus } from './utils/enums';
 import { Army } from './models/army.model';
 import { Battle } from './models/battle.model';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { Logger } from 'winston';
 
 @Injectable()
-export class BattleService {
+export class BattleService implements OnApplicationShutdown {
+  private startedBattles = [];
   constructor(
     @InjectModel(Battle)
     private battleModel: typeof Battle,
     @InjectModel(Army)
     private armyModel: typeof Army,
-  ) { }
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger
+  ) {}
 
   async createBattle(): Promise<number> {
     const battle = await this.battleModel.create({
       status: BattleStatus.CREATED,
       units: [],
     });
+     this.logger.log({
+      level: 'info',
+      message: 'Hello there.',
+    }
+    ); 
     return battle.id;
   }
 
@@ -124,7 +138,7 @@ export class BattleService {
       case AttackStrategy.RANDOM: {
         defender =
           potentialDefenders[
-          Math.floor(Math.random() * potentialDefenders.length)
+            Math.floor(Math.random() * potentialDefenders.length)
           ];
         break;
       }
@@ -150,4 +164,11 @@ export class BattleService {
     attacker.reloadTime = time;
     return attacker.save();
   }
+
+  onApplicationShutdown(signal: string) {
+    console.log(signal);
+  }
+  /*  beforeApplicationShutdown(signal: string){
+    console.log(signal)
+  } */
 }
