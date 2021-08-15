@@ -11,4 +11,4 @@ import { Battle } from './models/battle.model';
   providers: [BattleService],
   controllers: [BattleController],
 })
-export class BattleModule {}
+export class BattleModule { }

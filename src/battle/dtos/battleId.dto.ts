@@ -1,10 +1,10 @@
-import { Expose } from "class-transformer";
-import { IsNotEmpty, IsNumber } from "class-validator";
+import { Exclude, Expose } from 'class-transformer';
+import { IsNotEmpty, IsNumber } from 'class-validator';
 
-
-export class BattleIdDTO{
-    @Expose()
-    @IsNumber()
-    @IsNotEmpty()
-    battleId: number;
+@Exclude()
+export class BattleIdDTO {
+  @Expose()
+  @IsNumber()
+  @IsNotEmpty()
+  battleId: number;
 }

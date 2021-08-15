@@ -1,30 +1,36 @@
-import { Exclude, Expose } from "class-transformer"
-import { IsInt, IsString, Max, Min, MaxLength, IsEnum, IsNotEmpty} from "class-validator"
-import { StrategyTypes } from "../../utils/constants"
-import { StrategyType } from "../../utils/types"
-
+import { Exclude, Expose } from 'class-transformer';
+import {
+  IsEnum,
+  IsInt,
+  IsNotEmpty,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
+import { AttackStrategy } from '../utils/enums';
 
 @Exclude()
 export class ArmyDTO {
-    @Expose()
-    @IsString()
-    @MaxLength(20)
-    @IsNotEmpty()
-    name: string
+  @Expose()
+  @IsString()
+  @MaxLength(20)
+  @IsNotEmpty()
+  name: string;
 
-    @Expose()
-    @IsInt()
-    @Min(80)
-    @Max(100)
-    @IsNotEmpty()
-    units: number
+  @Expose()
+  @IsInt()
+  @Min(80)
+  @Max(100)
+  @IsNotEmpty()
+  units: number;
 
-    @Expose()
-    @IsEnum(StrategyTypes)
-    @IsNotEmpty()
-    strategy: StrategyType
+  @Expose()
+  @IsEnum(AttackStrategy)
+  @IsNotEmpty()
+  strategy: AttackStrategy;
 
-    constructor(partial: Partial<ArmyDTO>) {
-        Object.assign(this, partial);
-      }
+  constructor(partial: Partial<ArmyDTO>) {
+    Object.assign(this, partial);
+  }
 }
