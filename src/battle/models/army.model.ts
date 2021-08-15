@@ -34,6 +34,7 @@ export class Army extends Model {
       const hit = Math.random() < unitCount / 100;
       chance.push(hit);
     }
+    
     return chance.filter(Boolean).length * 0.5;
   }
 }

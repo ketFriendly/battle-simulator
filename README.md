@@ -2,31 +2,15 @@
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo_text.svg" width="320" alt="Nest Logo" /></a>
 </p>
 
-[travis-image]: https://api.travis-ci.org/nestjs/nest.svg?branch=master
-[travis-url]: https://travis-ci.org/nestjs/nest
-[linux-image]: https://img.shields.io/travis/nestjs/nest/master.svg?label=linux
-[linux-url]: https://travis-ci.org/nestjs/nest
-  
-  <p align="center">A progressive <a href="http://nodejs.org" target="blank">Node.js</a> framework for building efficient and scalable server-side applications, heavily inspired by <a href="https://angular.io" target="blank">Angular</a>.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore"><img src="https://img.shields.io/npm/dm/@nestjs/core.svg" alt="NPM Downloads" /></a>
-<a href="https://travis-ci.org/nestjs/nest"><img src="https://api.travis-ci.org/nestjs/nest.svg?branch=master" alt="Travis" /></a>
-<a href="https://travis-ci.org/nestjs/nest"><img src="https://img.shields.io/travis/nestjs/nest/master.svg?label=linux" alt="Linux" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#5" alt="Coverage" /></a>
-<a href="https://gitter.im/nestjs/nestjs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=body_badge"><img src="https://badges.gitter.im/nestjs/nestjs.svg" alt="Gitter" /></a>
-<a href="https://opencollective.com/nest#backer"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec"><img src="https://img.shields.io/badge/Donate-PayPal-dc3d53.svg"/></a>
-  <a href="https://twitter.com/nestframework"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+# Battle Simulator
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Application to simulate battle between 3+ armies. It was written using NestJS, Sequelize and PostgreSQL.
+
+User needs to provide at least 2 battles with at least 3 armies each in order to initiate the battles.
+
+Battle is first created, armies are added and then battle can be queued to start. After at least one more battle has been queued, they start (5 battles can be active simultaniously )
 
 ## Installation
 
@@ -36,6 +20,8 @@ $ npm install
 
 ## Running the app
 
+Create the database (PostgreSQL) and adjust the .env file (see .env.example).
+
 ```bash
 # development
 $ npm run start
@@ -43,33 +29,74 @@ $ npm run start
 # watch mode
 $ npm run start:dev
 
-# production mode
-$ npm run start:prod
+# debug
+$ npm run start:debug
 ```
 
-## Test
+## Usage
 
-```bash
-# unit tests
-$ npm run test
+In order to consume the API you need to create couple of battles and assign armies.
 
-# e2e tests
-$ npm run test:e2e
+Available routes at http://localhost:3000/
 
-# test coverage
-$ npm run test:cov
+| Method | Route            |
+| ------ | ---------------- |
+| POST   | /battle          |
+| POST   | /battle/add-army |
+| GET    | /battle          |
+| PATCH  | /battle          |
+| PUT    | /battle          |
+
+### POST /battle
+
+Creates a battle, and returns an ID of it.
+
+## POST /battle/add-army
+
+Create an army and assign it to first available battle.
+
+```json
+{
+  "army": {
+    "name": string,
+    "units": number between 80 - 100,
+    "strategy": "RANDOM" | "WEAKEST" | "STRONGEST
+  }
+}
 ```
 
-## Support
+### GET /battle
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Retrieves all battles with their armies.
 
-## Stay in touch
+### PATCH /battle
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Schedules a battle to start if proper conditions are met.
+Body requires json in format of:
 
-## License
+```json
+{
+  "battleId": {
+    "battleId": 9
+  }
+}
+```
 
-  Nest is [MIT licensed](LICENSE).
+### PUT /battle
+
+Resets started battle.
+Body requires json in format of:
+
+```json
+{
+  "battleId": {
+    "battleId": 9
+  }
+}
+```
+
+### Left to do:
+
+- Seeding data
+- Log relevant data and recreating battle from logs
+- Restarting the battle from interupted place

@@ -5,6 +5,7 @@ export enum AttackStrategy {
 }
 export enum BattleStatus {
   CREATED = 'created',
+  QUEUED = 'queued',
   STARTED = 'started',
   FINISHED = 'finished',
 }
