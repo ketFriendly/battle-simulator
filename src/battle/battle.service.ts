@@ -1,8 +1,4 @@
-import {
-  Inject,
-  Injectable,
-  OnApplicationShutdown,
-} from '@nestjs/common';
+import { Inject, Injectable, OnApplicationShutdown } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { classToPlain } from 'class-transformer';
 import { ArmyDTO } from './dtos/army.dto';
@@ -11,7 +7,7 @@ import { AttackStrategy, BattleStatus } from './utils/enums';
 import { Army } from './models/army.model';
 import { Battle } from './models/battle.model';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { Logger } from 'winston';
+import { Logger, QueryOptions } from 'winston';
 
 @Injectable()
 export class BattleService implements OnApplicationShutdown {
@@ -197,18 +193,19 @@ export class BattleService implements OnApplicationShutdown {
         }
       }
     }
-
-    battle.status = BattleStatus.FINISHED;
-    battle.units.forEach(army => {
-      if (army.units === 0) {
-        army.destroy();
-      } else {
-        army.save();
-      }
-    });
-    this.startedBattles = this.startedBattles.filter(b => b.id !== battle.id);
-    battle.save();
-    this.logger.info(`Battle ${battle.id} finished`, { battleID: battle.id });
+    if (armies.length === 1) {
+      battle.status = BattleStatus.FINISHED;
+      battle.units.forEach(army => {
+        if (army.units === 0) {
+          army.destroy();
+        } else {
+          army.save();
+        }
+      });
+      this.startedBattles = this.startedBattles.filter(b => b.id !== battle.id);
+      battle.save();
+      this.logger.info(`Battle ${battle.id} finished`, { battleID: battle.id });
+    }
   }
 
   async chooseDefender(
@@ -244,7 +241,7 @@ export class BattleService implements OnApplicationShutdown {
     return defender;
   }
 
-  receiveDamage(hits: number, defender: Army) {
+  receiveDamage(hits: number, defender: Army): Army {
     if (hits - defender.units === -0.5 || hits - defender.units >= 0) {
       defender.units = 0;
     } else {
@@ -256,12 +253,12 @@ export class BattleService implements OnApplicationShutdown {
     return defender;
   }
 
-  setAttackerReload(attacker: Army) {
+  setAttackerReload(attacker: Army): Army {
     const time = new Date(Date.now() + attacker.units * 10); //10 is the number of miliseconds it takes to reload
     attacker.reloadTime = time;
     return attacker;
   }
-  resetStartedBattle(battleId) {
+  resetStartedBattle(battleId: number): void {
     const battle = this.startedBattles.find(battle => battle.id === battleId);
     if (battle) {
       this.startedBattles = this.startedBattles.filter(
@@ -292,4 +289,32 @@ export class BattleService implements OnApplicationShutdown {
     return Promise.resolve(null);
   }
 
+  async getLogs(startDate, battleId) {
+    const options: QueryOptions = {
+      from: startDate,
+      until: new Date(),
+      limit: 5000,
+      fields: ['timestamp', 'message', 'battleID'],
+    };
+    let results = [];
+
+    let promise: { file: [] } = await new Promise((resolve, reject) =>
+      this.logger.query(options, (err: Error, result: { file: [] }) => {
+        if (err) {
+          return reject(err);
+        }
+        return resolve(result);
+      }),
+    );
+
+    results = promise.file;
+    console.log(results.length > 0);
+    if (results.length > 0) {
+      const filtered = results.filter(item => {
+        return item.battleID == battleId;
+      });
+      return filtered;
+    }
+    return 'Battle did not occure on the given date';
+  }
 }

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post, Put, Query } from '@nestjs/common';
 import { BattleService } from './battle.service';
 import { ArmyDTO } from './dtos/army.dto';
 import { BattleDTO } from './dtos/battle.dto';
@@ -52,4 +52,15 @@ export class BattleController {
       console.log(error);
     }
   }
+
+  @Post('logs/recreate')
+  async recreateBattleFromLog(@Query('startDate') startDate: Date, @Query('battleId') battleId: string){
+    try {
+      return await this.battleService.getLogs(startDate, battleId);
+    } catch (error) {
+      console.log(error);
+    }
+
+  }
+
 }

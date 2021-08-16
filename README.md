@@ -39,13 +39,14 @@ In order to consume the API you need to create couple of battles and assign armi
 
 Available routes at http://localhost:3000/
 
-| Method | Route            |
-| ------ | ---------------- |
-| POST   | /battle          |
-| POST   | /battle/add-army |
-| GET    | /battle          |
-| PATCH  | /battle          |
-| PUT    | /battle          |
+| Method | Route                 |
+| ------ | --------------------- |
+| POST   | /battle               |
+| POST   | /battle/add-army      |
+| GET    | /battle               |
+| PATCH  | /battle               |
+| PUT    | /battle               |
+| POST   | /battle/logs/recreate |
 
 ### POST /battle
 
@@ -55,7 +56,7 @@ Creates a battle, and returns an ID of it.
 
 Create an army and assign it to first available battle.
 
-```json
+```
 {
   "army": {
     "name": string,
@@ -74,10 +75,10 @@ Retrieves all battles with their armies.
 Schedules a battle to start if proper conditions are met.
 Body requires json in format of:
 
-```json
+```
 {
   "battleId": {
-    "battleId": 9
+    "battleId": number
   }
 }
 ```
@@ -87,16 +88,24 @@ Body requires json in format of:
 Resets started battle.
 Body requires json in format of:
 
-```json
+```
 {
   "battleId": {
-    "battleId": 9
+    "battleId": number
   }
 }
+```
+
+### POST /battle/logs/recreate
+
+Recreate battle from logs
+Requires query params: 
+```
+      ? startDate= Date 
+      & battleId= number
 ```
 
 ### Left to do:
 
 - Seeding data
-- Log relevant data and recreating battle from logs
-- Restarting the battle from interupted place
+- Restarting the battle 
