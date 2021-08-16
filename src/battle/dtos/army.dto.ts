@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { Exclude, Expose } from 'class-transformer';
 import {
   IsEnum,
@@ -12,12 +13,14 @@ import { AttackStrategy } from '../utils/enums';
 
 @Exclude()
 export class ArmyDTO {
+  @ApiProperty()
   @Expose()
   @IsString()
   @MaxLength(20)
   @IsNotEmpty()
   name: string;
 
+  @ApiProperty()
   @Expose()
   @IsInt()
   @Min(80)
@@ -25,6 +28,7 @@ export class ArmyDTO {
   @IsNotEmpty()
   units: number;
 
+  @ApiProperty()
   @Expose()
   @IsEnum(AttackStrategy)
   @IsNotEmpty()

@@ -184,6 +184,7 @@ export class BattleService implements OnApplicationShutdown {
             `Battle ${attacker.battleId}.Army with the ${attacker.id} started reload `,
             { battleID: attacker.battleId, attackerID: attacker.id },
           );
+
           battle.units.forEach(unit => {
             if (unit.id === attackerReloaded.id) {
               return attackerReloaded;
@@ -193,19 +194,17 @@ export class BattleService implements OnApplicationShutdown {
         }
       }
     }
-    if (armies.length === 1) {
-      battle.status = BattleStatus.FINISHED;
-      battle.units.forEach(army => {
-        if (army.units === 0) {
-          army.destroy();
-        } else {
-          army.save();
-        }
-      });
-      this.startedBattles = this.startedBattles.filter(b => b.id !== battle.id);
-      battle.save();
-      this.logger.info(`Battle ${battle.id} finished`, { battleID: battle.id });
-    }
+    battle.status = BattleStatus.FINISHED;
+    battle.units.forEach(army => {
+      if (army.units === 0) {
+        army.destroy();
+      } else {
+        army.save();
+      }
+    });
+    this.startedBattles = this.startedBattles.filter(b => b.id !== battle.id);
+    await battle.save();
+    this.logger.info(`Battle ${battle.id} finished`, { battleID: battle.id });
   }
 
   async chooseDefender(
@@ -258,6 +257,7 @@ export class BattleService implements OnApplicationShutdown {
     attacker.reloadTime = time;
     return attacker;
   }
+
   resetStartedBattle(battleId: number): void {
     const battle = this.startedBattles.find(battle => battle.id === battleId);
     if (battle) {
@@ -276,7 +276,7 @@ export class BattleService implements OnApplicationShutdown {
     if (this.startedBattles.length > 0) {
       await this.updateStarted();
     }
-    console.log(signal);
+    // console.log(signal);
   }
 
   async updateStarted(): Promise<any> {
@@ -308,7 +308,6 @@ export class BattleService implements OnApplicationShutdown {
     );
 
     results = promise.file;
-    console.log(results.length > 0);
     if (results.length > 0) {
       const filtered = results.filter(item => {
         return item.battleID == battleId;

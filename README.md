@@ -6,7 +6,7 @@
 
 ## Description
 
-Application to simulate battle between 3+ armies. It was written using NestJS, Sequelize and PostgreSQL.
+Application that simulates battles between 3+ armies. It was written using NestJS, Sequelize and PostgreSQL.
 
 User needs to provide at least 2 battles with at least 3 armies each in order to initiate the battles.
 
@@ -37,7 +37,7 @@ $ npm run start:debug
 
 In order to consume the API you need to create couple of battles and assign armies.
 
-Available routes at http://localhost:3000/
+List of available routes at http://localhost:3000/. You can find API docs at http://localhost:3000/api
 
 | Method | Route                 |
 | ------ | --------------------- |
@@ -46,7 +46,7 @@ Available routes at http://localhost:3000/
 | GET    | /battle               |
 | PATCH  | /battle               |
 | PUT    | /battle               |
-| GET   | /battle/logs/recreate |
+| GET    | /battle/logs/recreate |
 
 ### POST /battle
 
@@ -99,13 +99,17 @@ Body requires json in format of:
 ### GET /battle/logs/recreate
 
 Recreate battle from logs
-Requires query params: 
+Requires query params:
+
 ```
-      ? startDate= Date 
-      & battleId= number
+  - startDate= Date
+  - battleId= number
+
 ```
 
 ### Left to do:
 
 - Seeding data
-- Restarting the battle 
+- Restarting the battle
+- Error handling
+- Returning more detailed responses 
