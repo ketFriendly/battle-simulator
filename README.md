@@ -46,7 +46,7 @@ Available routes at http://localhost:3000/
 | GET    | /battle               |
 | PATCH  | /battle               |
 | PUT    | /battle               |
-| POST   | /battle/logs/recreate |
+| GET   | /battle/logs/recreate |
 
 ### POST /battle
 
@@ -96,7 +96,7 @@ Body requires json in format of:
 }
 ```
 
-### POST /battle/logs/recreate
+### GET /battle/logs/recreate
 
 Recreate battle from logs
 Requires query params: 

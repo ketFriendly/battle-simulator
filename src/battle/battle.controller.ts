@@ -53,7 +53,7 @@ export class BattleController {
     }
   }
 
-  @Post('logs/recreate')
+  @Get('logs/recreate')
   async recreateBattleFromLog(@Query('startDate') startDate: Date, @Query('battleId') battleId: string){
     try {
       return await this.battleService.getLogs(startDate, battleId);
