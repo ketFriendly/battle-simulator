@@ -1,5 +1,4 @@
 import {
-  BeforeApplicationShutdown,
   Inject,
   Injectable,
   OnApplicationShutdown,
@@ -16,7 +15,7 @@ import { Logger } from 'winston';
 
 @Injectable()
 export class BattleService implements OnApplicationShutdown {
-  private startedBattles: Array<Battle> = []; //minimum 2 max 5
+  private startedBattles = []; //minimum 2 max 5
   private queuedBattles = [];
   constructor(
     @InjectModel(Battle)
@@ -24,7 +23,27 @@ export class BattleService implements OnApplicationShutdown {
     @InjectModel(Army)
     private armyModel: typeof Army,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-  ) {}
+  ) {
+    this.populateBattles();
+  }
+
+  private async populateBattles() {
+    this.queuedBattles.push(
+      ...(await this.battleModel.findAll({
+        where: { status: BattleStatus.QUEUED },
+        include: [Army],
+      })),
+    );
+
+    this.startedBattles.push(
+      ...(await this.battleModel.findAll({
+        where: {
+          status: BattleStatus.STARTED,
+        },
+        include: [Army],
+      })),
+    );
+  }
 
   async createBattle(): Promise<number> {
     const battle = await this.battleModel.create({
@@ -44,7 +63,7 @@ export class BattleService implements OnApplicationShutdown {
       tempArmy.battleId = battles[0].id;
       tempArmy.battle = battles[0];
       const newArmy = await tempArmy.save();
-      return `Created an army with the id ${newArmy.id}`;
+      return `Created an army with the id ${newArmy.id} and added to battle ${newArmy.battleId}`;
     }
     return 'Cannot add army as all battles have already started or finished. Try creating a new battle.';
   }
@@ -61,22 +80,29 @@ export class BattleService implements OnApplicationShutdown {
     const battleToStart = await this.battleModel.findByPk(id, {
       include: [Army],
     });
+
     const battleExistsAndIsCreated =
       battleToStart && battleToStart.status === 'created';
-    const hasThreeOrMoreArmies = battleToStart.units.length >= 3;
-    const thereAreBetweenTwoAndFiveStartedBattles =
-      this.startedBattles.length >= 2 || this.startedBattles.length === 5;
-    const thereAreFiveStartedBattles = this.startedBattles.length === 5;
-
-    if (!hasThreeOrMoreArmies) {
-      return "Battle doesn't have enough armies to start";
-    }
 
     if (!battleExistsAndIsCreated) {
       return "Battle can't be started or doesn't exist.";
     }
 
-    if (thereAreFiveStartedBattles) {
+    const hasThreeOrMoreArmies = battleToStart.units.length >= 3;
+    const thereAreBetweenTwoAndFiveStartedBattles =
+      this.startedBattles.length >= 2 || this.startedBattles.length === 4;
+    const thereAreFiveStartedBattles = this.startedBattles.length === 5;
+    const isQueueEmpty = this.queuedBattles.length === 0;
+    const doesQueueHaveAtLeastOneBattle = this.queuedBattles.length >= 1;
+
+    if (!hasThreeOrMoreArmies) {
+      return "Battle doesn't have enough armies to start";
+    }
+
+    if (
+      thereAreFiveStartedBattles ||
+      (isQueueEmpty && this.startedBattles.length < 2)
+    ) {
       battleToStart.status = BattleStatus.QUEUED;
       this.queuedBattles.push(battleToStart);
       await battleToStart.save();
@@ -86,12 +112,20 @@ export class BattleService implements OnApplicationShutdown {
       return 'Battle has been queued.';
     }
 
-    if (thereAreBetweenTwoAndFiveStartedBattles) {
+    if (
+      thereAreBetweenTwoAndFiveStartedBattles ||
+      doesQueueHaveAtLeastOneBattle
+    ) {
       battleToStart.status = BattleStatus.STARTED;
       this.startedBattles.push(battleToStart);
       await battleToStart.save();
       this.battlefield(battleToStart);
-      for (let i = 0; i < 5 - this.startedBattles.length; i++) {
+      let length =
+        this.queuedBattles.length < 5 - this.startedBattles.length
+          ? this.queuedBattles.length
+          : 5 - this.startedBattles.length;
+
+      for (let i = 0; i < length; i++) {
         let queuedBattleToStart = this.queuedBattles.shift();
         queuedBattleToStart.status = BattleStatus.STARTED;
         await queuedBattleToStart.save();
@@ -109,6 +143,7 @@ export class BattleService implements OnApplicationShutdown {
 
   async battlefield(battle: Battle) {
     let armies = battle.units;
+
     while (armies.length > 1) {
       for (let i = 0; i < armies.length; i++) {
         const attacker = armies[i];
@@ -137,6 +172,10 @@ export class BattleService implements OnApplicationShutdown {
           );
           const result = this.receiveDamage(damage, defender);
 
+          if (result.units === 0) {
+            armies = armies.filter(army => army.id !== result.id);
+          }
+
           battle.units = battle.units.map(unit => {
             if (unit.id === result.id) {
               return result;
@@ -158,7 +197,7 @@ export class BattleService implements OnApplicationShutdown {
         }
       }
     }
-    //update battle and units with result
+
     battle.status = BattleStatus.FINISHED;
     battle.units.forEach(army => {
       if (army.units === 0) {
@@ -207,7 +246,6 @@ export class BattleService implements OnApplicationShutdown {
 
   receiveDamage(hits: number, defender: Army) {
     if (hits - defender.units === -0.5 || hits - defender.units >= 0) {
-      //this.armyModel.destroy({ where: { id: defender.id } });
       defender.units = 0;
     } else {
       let unitsRemaining = defender.units - hits;
@@ -217,11 +255,10 @@ export class BattleService implements OnApplicationShutdown {
 
     return defender;
   }
-  //check reload time
+
   setAttackerReload(attacker: Army) {
     const time = new Date(Date.now() + attacker.units * 10); //10 is the number of miliseconds it takes to reload
     attacker.reloadTime = time;
-    //return attacker.save();
     return attacker;
   }
   resetStartedBattle(battleId) {
@@ -254,7 +291,5 @@ export class BattleService implements OnApplicationShutdown {
     });
     return Promise.resolve(null);
   }
-  /*  beforeApplicationShutdown(signal: string){
-    console.log(signal)
-  } */
+
 }
